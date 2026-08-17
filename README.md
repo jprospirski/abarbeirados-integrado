@@ -15,7 +15,7 @@ regras de negócio seguem em aberto — o desenvolvimento avança sobre o domín
 | Frente | Situação |
 |---|---|
 | Backend (Spring Boot) | CRUD completo de Cliente, Serviço e Agendamento |
-| Frontend (Angular) | Telas de Agendamento e Serviços |
+| Frontend (Angular) | Listagem de agendamentos e formulário de marcação, consumindo a API |
 | Banco de dados | H2 em memória (provisório) → PostgreSQL 18 |
 | Especificação do demandante | Pendente |
 
@@ -86,7 +86,7 @@ regras de negócio seguem em aberto — o desenvolvimento avança sobre o domín
 | | Lombok | — | Gerenciado pelo Spring Boot |
 | Banco | H2 | — | Provisório, em memória |
 | | PostgreSQL | 18 | Definitivo — não integrado ainda |
-| Frontend | Angular | 19 | Telas de Agendamento e Serviços |
+| Frontend | Angular | 19 | Listagem e formulário de agendamento |
 | | Node.js | 20.11+ | Ver nota abaixo |
 | Apoio | DBeaver, IntelliJ IDEA | — | Cliente do banco e IDE do time |
 
@@ -117,7 +117,7 @@ back/src/main/java/uniamerica/abarbeirados/
 
 front/src/app/
 ├── core/         models, services e utilitários compartilhados
-└── features/     agendamento/ e servico/, carregadas por rota
+└── features/     agenda/ (listagem) e agendamento/ (formulário), por rota
 ```
 
 ---
@@ -243,12 +243,13 @@ Exemplo: `feat: adiciona endpoint de listagem de clientes`
 - [x] Implementar DTOs como `record`
 - [x] Implementar o CRUD e os 6 endpoints
 - [x] Inicializar o frontend Angular 19
-- [x] Tela de agendamento (frontend)
-- [x] Tela de serviços (frontend)
+- [x] Formulário de marcação (frontend)
+- [x] Listagem de agendamentos com troca de status (frontend)
+- [x] Ligar o frontend à API — não há mais dado em memória
 - [ ] Migrar de H2 para PostgreSQL 18
-- [ ] Tela de clientes (frontend)
-- [ ] Ligar a tela de agendamento à API — hoje os dados dela são in-memory
 - [ ] Validar conflito de horário no backend (dois agendamentos no mesmo intervalo)
+- [ ] Permitir valor e duração personalizados no agendamento (caso da Química)
+- [ ] Telas de manutenção de Cliente e Serviço — o CRUD dos dois já existe na API
 - [ ] Testes automatizados — só existe o teste de contexto gerado pelo Spring
 
 ---
