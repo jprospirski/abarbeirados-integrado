@@ -1,0 +1,24 @@
+<main class="pagina">
+  <header>
+    <h1>Serviços</h1>
+    <input type="search" placeholder="Pesquisar serviço" aria-label="Pesquisar serviço" (input)="atualizarBusca($event)" />
+  </header>
+
+  @if (carregando) {
+  <p>Carregando serviços...</p>
+  } @else if (erro) {
+  <p class="mensagem-erro">{{ erro }}</p>
+  } @else if (servicosFiltrados.length === 0) {
+  <p>Nenhum serviço encontrado.</p>
+  } @else {
+  <section class="lista-cards" aria-label="Lista de serviços">
+    @for (servico of servicosFiltrados; track servico.id) {
+    <article class="card">
+      <h2>{{ servico.nome }}</h2>
+      <p>R$ {{ servico.valor | number:'1.2-2' }}</p>
+      <small>{{ servico.duracaoMinutos }} min</small>
+    </article>
+    }
+  </section>
+  }
+</main>
