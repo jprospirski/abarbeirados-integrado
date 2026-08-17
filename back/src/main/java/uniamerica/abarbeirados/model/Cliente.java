@@ -4,7 +4,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "clientes")
+// Singular, como `servico` e `agendamento`: uma linha e um cliente. O nome da
+// tabela nao acompanha o da rota /api/clientes — la o plural e a colecao.
+@Table(name = "cliente")
 @Getter
 @Setter
 @NoArgsConstructor
