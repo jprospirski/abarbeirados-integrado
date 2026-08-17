@@ -50,17 +50,86 @@
 
   <hr class="regua" />
 
+  <!-- ================================================== filtro por dia -->
+  <div class="filtro">
+    <div class="filtro__topo">
+      <h2 class="rotulo">Filtrar por dia</h2>
+
+      <div class="filtro__controles">
+        <span class="filtro__mes">{{ tituloMes() }}</span>
+        <button type="button" class="botao-secundario" (click)="irParaHoje()">
+          Hoje
+        </button>
+        @if (diaSelecionado()) {
+          <button type="button" class="botao-secundario" (click)="limparDia()">
+            Todos os dias
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="semana">
+      <button
+        type="button"
+        class="semana__seta"
+        (click)="semanaAnterior()"
+        aria-label="Semana anterior"
+      >
+        &lsaquo;
+      </button>
+
+      <div class="semana__dias">
+        @for (dia of semana(); track dia.iso) {
+          <button
+            type="button"
+            class="dia"
+            [class.is-ativo]="diaSelecionado() === dia.iso"
+            [class.is-hoje]="dia.hoje"
+            [attr.aria-pressed]="diaSelecionado() === dia.iso"
+            (click)="selecionarDia(dia.iso)"
+          >
+            <span class="dia__rotulo">{{ dia.rotulo }}</span>
+            <strong class="dia__num">{{ dia.numero }}</strong>
+            <span class="dia__mes">{{ dia.mes }}</span>
+            <span class="dia__conta" [class.is-vazio]="dia.total === 0">
+              {{ dia.total }}
+            </span>
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="semana__seta"
+        (click)="semanaSeguinte()"
+        aria-label="Próxima semana"
+      >
+        &rsaquo;
+      </button>
+    </div>
+  </div>
+
   @if (service.erroCarga(); as falha) {
     <p class="alerta alerta--erro" role="alert">{{ falha }}</p>
   } @else if (service.carregando()) {
     <p class="agenda__estado">Carregando agendamentos...</p>
   } @else if (agendamentos().length === 0) {
-    <p class="agenda__estado">Nenhum agendamento encontrado.</p>
+    <p class="agenda__estado">
+      {{
+        diaSelecionado()
+          ? 'Nenhum agendamento neste dia.'
+          : 'Nenhum agendamento encontrado.'
+      }}
+    </p>
   } @else {
     <p class="agenda__meta">
       {{ resumo().total }} {{ resumo().total === 1 ? 'agendamento' : 'agendamentos' }}
       <span class="agenda__ponto" aria-hidden="true"></span>
       {{ resumo().ativos }} em aberto
+      @if (diaSelecionado()) {
+        <span class="agenda__ponto" aria-hidden="true"></span>
+        <span class="agenda__recorte">Dia filtrado</span>
+      }
     </p>
 
     @if (erro()) {

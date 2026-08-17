@@ -9,10 +9,29 @@ import {
   StatusAgendamento,
 } from '../../core/models/agendamento.model';
 import { AgendamentoService } from '../../core/services/agendamento.service';
-import { dataDe, horaDe } from '../../core/util/data.util';
+import {
+  DIAS_SEMANA,
+  MESES,
+  MESES_CURTOS,
+  dataDe,
+  horaDe,
+  inicioDaSemana,
+  paraDataIso,
+  somarDias,
+} from '../../core/util/data.util';
 
 /** As três formas de olhar a mesma lista. */
 type Visao = 'cartoes' | 'lista' | 'colunas';
+
+/** Um dia da faixa de filtro, com quantos agendamentos caem nele. */
+interface DiaFiltro {
+  iso: string;
+  rotulo: string;
+  numero: number;
+  mes: string;
+  hoje: boolean;
+  total: number;
+}
 
 /** Ordem em que os status aparecem no quadro de colunas. */
 const STATUS: StatusAgendamento[] = [
@@ -41,24 +60,80 @@ export class AgendaComponent implements OnInit {
   protected readonly STATUS = STATUS;
   protected readonly STATUS_LABEL = STATUS_LABEL;
 
+  protected readonly hoje = paraDataIso(new Date());
+
   protected readonly visao = signal<Visao>('cartoes');
   protected readonly busca = signal('');
   protected readonly erro = signal<string | null>(null);
   /** Id em gravação, para travar só a linha que está mudando. */
   protected readonly salvandoId = signal<number | null>(null);
 
-  /** Ordenados por data e hora, com os campos de exibição já prontos. */
-  protected readonly agendamentos = computed(() => {
+  /** Domingo da semana que está aparecendo na faixa. */
+  private readonly inicioSemana = signal(inicioDaSemana(new Date()));
+  /** ISO do dia filtrado, ou null para a agenda inteira. */
+  protected readonly diaSelecionado = signal<string | null>(null);
+
+  /**
+   * Recorte por texto, aplicado antes do recorte por dia.
+   *
+   * A ordem importa: a contagem que aparece em cada dia da faixa sai daqui, e
+   * não da lista final — assim, ao pesquisar um cliente, a faixa mostra em quais
+   * dias ele tem horário, em vez de repetir o total de sempre.
+   */
+  private readonly porBusca = computed(() => {
     const termo = this.busca().trim().toLowerCase();
+
+    if (!termo) {
+      return this.service.agendamentos();
+    }
 
     return this.service
       .agendamentos()
       .filter(
         (a) =>
-          !termo ||
           a.clienteNome.toLowerCase().includes(termo) ||
           a.servicoNome.toLowerCase().includes(termo),
-      )
+      );
+  });
+
+  /** Os sete dias da semana em exibição, com a contagem de cada um. */
+  protected readonly semana = computed<DiaFiltro[]>(() => {
+    const inicio = this.inicioSemana();
+    const lista = this.porBusca();
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const dia = somarDias(inicio, i);
+      const iso = paraDataIso(dia);
+
+      return {
+        iso,
+        rotulo: DIAS_SEMANA[dia.getDay()],
+        numero: dia.getDate(),
+        mes: MESES_CURTOS[dia.getMonth()],
+        hoje: iso === this.hoje,
+        total: lista.filter((a) => dataDe(a.dataHora) === iso).length,
+      };
+    });
+  });
+
+  protected readonly tituloMes = computed(() => {
+    const inicio = this.inicioSemana();
+    const fim = somarDias(inicio, 6);
+    const ano = fim.getFullYear();
+
+    if (inicio.getMonth() === fim.getMonth()) {
+      return `${MESES[inicio.getMonth()]} ${ano}`;
+    }
+
+    return `${MESES[inicio.getMonth()]} — ${MESES[fim.getMonth()]} ${ano}`;
+  });
+
+  /** Ordenados por data e hora, com os campos de exibição já prontos. */
+  protected readonly agendamentos = computed(() => {
+    const dia = this.diaSelecionado();
+
+    return this.porBusca()
+      .filter((a) => !dia || dataDe(a.dataHora) === dia)
       .map((a) => ({
         ...a,
         dia: diaCurto(a.dataHora),
@@ -98,6 +173,38 @@ export class AgendaComponent implements OnInit {
   protected atualizarBusca(evento: Event): void {
     this.busca.set((evento.target as HTMLInputElement).value);
   }
+
+  // ------------------------------------------------------------ filtro de dia
+
+  /** Clicar no dia já selecionado desmarca e volta a mostrar a agenda inteira. */
+  protected selecionarDia(iso: string): void {
+    this.diaSelecionado.update((atual) => (atual === iso ? null : iso));
+  }
+
+  protected limparDia(): void {
+    this.diaSelecionado.set(null);
+  }
+
+  /*
+   * A faixa anda livremente para trás, ao contrário da do formulário: lá o
+   * passado não pode ser reservado, aqui ele é justamente o histórico que a
+   * agenda precisa mostrar.
+   */
+  protected semanaAnterior(): void {
+    this.inicioSemana.update((d) => somarDias(d, -7));
+  }
+
+  protected semanaSeguinte(): void {
+    this.inicioSemana.update((d) => somarDias(d, 7));
+  }
+
+  /** Volta a faixa para a semana corrente e mostra o dia de hoje. */
+  protected irParaHoje(): void {
+    this.inicioSemana.set(inicioDaSemana(new Date()));
+    this.diaSelecionado.set(this.hoje);
+  }
+
+  // ------------------------------------------------------------------- status
 
   protected mudarStatus(agendamento: Agendamento, evento: Event): void {
     const status = (evento.target as HTMLSelectElement).value as StatusAgendamento;
