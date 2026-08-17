@@ -206,9 +206,13 @@
  * última linha fica irregular e não há retângulo para arredondar — então o raio
  * vai para a peça e os blocos viram fichas soltas.
  */
+/* auto-fit e não auto-fill: o auto-fill mantém as trilhas vazias abertas, e com
+   o painel ocupando a largura toda sobrava meia faixa morta à direita quando o
+   dia tinha poucos horários livres. O auto-fit recolhe as trilhas vazias e os
+   horários existentes se distribuem pela linha inteira. */
 .grade__slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
   gap: 7px;
 }
 
