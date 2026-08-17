@@ -18,7 +18,7 @@
    cadastro em vez de parar na altura do próprio conteúdo. */
 .agendar__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 500px;
+  grid-template-columns: minmax(0, 1fr) 430px;
   gap: 14px;
 }
 
@@ -395,9 +395,9 @@
 
 /* ------------------------------------------------------------ responsivo -- */
 
-/* Sobe de 1020px porque a coluna do resumo passou de 318px para 500px: abaixo
+/* Sobe de 1020px porque a coluna do resumo passou de 318px para 430px: abaixo
    disto o painel do formulário ficaria mais estreito que o próprio resumo. */
-@media (max-width: 1280px) {
+@media (max-width: 1200px) {
   .agendar__grid {
     grid-template-columns: minmax(0, 1fr);
   }
