@@ -64,6 +64,16 @@ export class AgendaComponent implements OnInit {
 
   protected readonly visao = signal<Visao>('cartoes');
   protected readonly busca = signal('');
+  /**
+   * Em tela estreita não faz sentido oferecer as três visões: a lista vira
+   * colunas espremidas e o quadro não cabe. O cartão é o único formato que lê
+   * bem no celular, então ele passa a ser o único.
+   */
+  protected readonly ehEstreito = signal(false);
+  /** O que a tela realmente desenha: no estreito, sempre cartões. */
+  protected readonly visaoEfetiva = computed<Visao>(() =>
+    this.ehEstreito() ? 'cartoes' : this.visao(),
+  );
   protected readonly erro = signal<string | null>(null);
   /** Id em gravação, para travar só a linha que está mudando. */
   protected readonly salvandoId = signal<number | null>(null);
@@ -161,6 +171,16 @@ export class AgendaComponent implements OnInit {
       ativos: lista.filter((a) => a.status !== 'CANCELADO').length,
     };
   });
+
+  constructor() {
+    // Mesmo ponto de corte do @media que esconde o alternador no scss.
+    const consulta = window.matchMedia('(max-width: 720px)');
+    const aoMudar = (evento: MediaQueryListEvent) => this.ehEstreito.set(evento.matches);
+
+    this.ehEstreito.set(consulta.matches);
+    consulta.addEventListener('change', aoMudar);
+    this.destroyRef.onDestroy(() => consulta.removeEventListener('change', aoMudar));
+  }
 
   ngOnInit(): void {
     this.service.carregar();

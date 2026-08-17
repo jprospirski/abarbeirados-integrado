@@ -6,6 +6,7 @@
     </div>
 
     <div class="agenda__acoes">
+      @if (!ehEstreito()) {
       <div class="alternador" role="group" aria-label="Modo de visualização">
         <button
           type="button"
@@ -35,6 +36,7 @@
           Colunas
         </button>
       </div>
+      }
 
       <input
         type="search"
@@ -148,7 +150,7 @@
     }
 
     <!-- ===================================================== cartões -->
-    @if (visao() === 'cartoes') {
+    @if (visaoEfetiva() === 'cartoes') {
       <ul class="cartoes">
         @for (a of agendamentos(); track a.id) {
           <li class="cartao" [class.is-cancelado]="a.status === 'CANCELADO'">
@@ -188,7 +190,7 @@
     }
 
     <!-- ======================================================= lista -->
-    @if (visao() === 'lista') {
+    @if (visaoEfetiva() === 'lista') {
       <div class="tabela">
         <div class="tabela__cabecalho" aria-hidden="true">
           <span>Quando</span>
@@ -227,7 +229,7 @@
     }
 
     <!-- ===================================================== colunas -->
-    @if (visao() === 'colunas') {
+    @if (visaoEfetiva() === 'colunas') {
       <div class="quadro">
         @for (coluna of porStatus(); track coluna.status) {
           <section class="coluna">

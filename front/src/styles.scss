@@ -396,6 +396,8 @@ textarea {
   }
 }
 
+/* `min-width: 0` é o que impede a faixa de empurrar a página: sem ele o item
+   flex assume a largura do conteúdo e a rolagem lateral vaza para o body. */
 .semana__dias {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));

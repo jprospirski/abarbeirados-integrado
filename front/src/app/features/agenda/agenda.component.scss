@@ -472,10 +472,16 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  /* Os 7 dias passam a rolar lateralmente em vez de espremer. */
-  .semana__dias {
-    grid-template-columns: repeat(7, 82px);
-    overflow-x: auto;
+  /*
+   * Os sete dias continuam dividindo a faixa, mas o conteúdo da célula empilha.
+   * Em linha, `dom 16 ago 2` não cabe na célula estreita: os rótulos vazavam por
+   * cima do vizinho e a contagem colidia com o dia seguinte.
+   */
+  .dia {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 9px 4px;
   }
 
   /* As três zonas não cabem lado a lado. Rótulo e mês dividem a primeira linha,
@@ -503,5 +509,119 @@
   .tabela__cabecalho span:nth-child(4),
   .tabela__linha .tabela__valor {
     display: none;
+  }
+}
+
+/* =========================================================== responsivo ==
+
+   Abaixo de 720px a tela é de celular: só a visão de cartões existe (o
+   alternador some do DOM, ver ehEstreito no componente), tudo empilha em uma
+   coluna e a faixa de dias vira uma tira rolável com encaixe.
+   ======================================================================== */
+
+@media (max-width: 720px) {
+  .agenda {
+    padding: 16px 14px 40px;
+  }
+
+  .agenda__topo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .agenda__titulo {
+    font-size: 1.6rem;
+  }
+
+  /* Busca ocupa a linha e o "Novo" fica do lado, sem quebrar. */
+  .agenda__acoes {
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .agenda__busca {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .agenda__acoes .botao-secundario {
+    flex: none;
+  }
+
+  /* Rótulo em cima, botões dividindo a linha de baixo. */
+  .filtro__topo {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 10px;
+  }
+
+  .filtro__mes {
+    grid-area: 1 / 2;
+    font-size: 1rem;
+  }
+
+  .filtro__controles {
+    grid-area: 2 / 1 / 3 / 3;
+    justify-self: stretch;
+  }
+
+  .filtro__controles .botao-secundario {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 10px;
+  }
+
+  /* A tira rola com o dedo e cada dia encaixa no lugar ao soltar. */
+  .semana__dias {
+    grid-template-columns: repeat(7, 88px);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .dia {
+    scroll-snap-align: center;
+    /* Empilha para caber nos 88px sem espremer a contagem. */
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 9px 4px;
+  }
+
+  .cartoes {
+    grid-template-columns: 1fr;
+  }
+
+  /* Alvos de toque maiores no seletor de status. */
+  .estado {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .agenda {
+    padding: 14px 12px 36px;
+  }
+
+  .agenda__titulo {
+    font-size: 1.42rem;
+  }
+
+  .cartao__rodape {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .estado {
+    width: 100%;
   }
 }
