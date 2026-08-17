@@ -152,10 +152,12 @@
   margin-top: auto;
 }
 
-/* Faixa de dados: separada por fio, e dividida por outro fio no meio. */
+/* Faixa de dados: separada do corpo por fio, e dividida por outro fio quando
+   houver mais de uma célula. */
 .cartao__dados {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   margin: 0;
   border-top: 1px solid var(--cor-borda);
 }

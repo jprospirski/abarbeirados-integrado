@@ -51,8 +51,6 @@
         {{ r.total }} {{ r.total === 1 ? 'serviço' : 'serviços' }}
         <span class="catalogo__ponto" aria-hidden="true"></span>
         {{ r.ativos }} {{ r.ativos === 1 ? 'ativo' : 'ativos' }}
-        <span class="catalogo__ponto" aria-hidden="true"></span>
-        {{ r.menorValor | currency: 'BRL' }} &ndash; {{ r.maiorValor | currency: 'BRL' }}
       </p>
     }
 
@@ -77,10 +75,6 @@
             <div class="cartao__dado">
               <dt>Duração</dt>
               <dd>{{ servico.duracaoRotulo }}</dd>
-            </div>
-            <div class="cartao__dado">
-              <dt>Por minuto</dt>
-              <dd>{{ servico.valorPorMinuto | currency: 'BRL' }}</dd>
             </div>
           </dl>
         </li>

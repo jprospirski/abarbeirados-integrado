@@ -5,14 +5,11 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Servico } from '../../core/models/servico.model';
 
 /**
- * O cartao mostra dois numeros que a API nao devolve prontos: a duracao escrita
- * por extenso e quanto o servico rende por minuto de cadeira ocupada. Ambos sao
- * calculados uma vez na chegada, e nao no template, para nao recalcular a cada
- * ciclo de deteccao de mudanca.
+ * A duracao escrita por extenso e calculada uma vez na chegada, e nao no
+ * template, para nao recalcular a cada ciclo de deteccao de mudanca.
  */
 interface ServicoCartao extends Servico {
   duracaoRotulo: string;
-  valorPorMinuto: number;
 }
 
 /** Formata 40 como "40 min", 60 como "1h" e 80 como "1h20". */
@@ -31,9 +28,6 @@ function paraCartao(servico: Servico): ServicoCartao {
   return {
     ...servico,
     duracaoRotulo: formatarDuracao(servico.duracaoMinutos),
-    // Guarda contra duracao zerada vinda do banco: dividir por zero viraria
-    // Infinity e o cartao imprimiria "R$ ∞".
-    valorPorMinuto: servico.duracaoMinutos > 0 ? servico.valor / servico.duracaoMinutos : 0,
   };
 }
 
@@ -69,7 +63,7 @@ export class ServicoComponent implements OnInit {
       : this.servicos();
   });
 
-  /** Rodape do cabecalho: quantos, quantos ativos e a faixa de preco. */
+  /** Rodape do cabecalho: quantos ao todo e quantos ativos. */
   protected readonly resumo = computed(() => {
     const lista = this.servicosFiltrados();
 
@@ -77,13 +71,9 @@ export class ServicoComponent implements OnInit {
       return null;
     }
 
-    const valores = lista.map((servico) => servico.valor);
-
     return {
       total: lista.length,
       ativos: lista.filter((servico) => servico.ativo).length,
-      menorValor: Math.min(...valores),
-      maiorValor: Math.max(...valores),
     };
   });
 
