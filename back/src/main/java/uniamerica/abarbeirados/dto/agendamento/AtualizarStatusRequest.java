@@ -1,7 +1,7 @@
 package uniamerica.abarbeirados.dto.agendamento;
 
 import jakarta.validation.constraints.NotNull;
-import uniamerica.abarbeirados.entity.StatusAgendamento;
+import uniamerica.abarbeirados.model.StatusAgendamento;
 
 public class AtualizarStatusRequest {
 

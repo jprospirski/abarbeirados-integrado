@@ -1,4 +1,4 @@
-package uniamerica.abarbeirados.entity;
+package uniamerica.abarbeirados.model;
 
 public enum StatusAgendamento {
     AGENDADO,

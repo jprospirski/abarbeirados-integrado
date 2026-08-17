@@ -1,7 +1,7 @@
 package uniamerica.abarbeirados.controller;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +10,8 @@ import uniamerica.abarbeirados.dto.agendamento.AgendaDoDiaResponse;
 import uniamerica.abarbeirados.dto.agendamento.AgendamentoRequest;
 import uniamerica.abarbeirados.dto.agendamento.AgendamentoResponse;
 import uniamerica.abarbeirados.dto.agendamento.AtualizarStatusRequest;
-import uniamerica.abarbeirados.entity.Agendamento;
 import uniamerica.abarbeirados.mapper.AgendamentoMapper;
+import uniamerica.abarbeirados.model.Agendamento;
 import uniamerica.abarbeirados.service.AgendamentoService;
 
 import java.time.LocalDate;
@@ -19,10 +19,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/agendamentos")
+@RequiredArgsConstructor
 public class AgendamentoController {
 
-    @Autowired
-    private AgendamentoService agendamentoService;
+    private final AgendamentoService agendamentoService;
 
     @PostMapping
     public ResponseEntity<AgendamentoResponse> save(@Valid @RequestBody AgendamentoRequest request) {
@@ -33,9 +33,9 @@ public class AgendamentoController {
     @GetMapping
     public ResponseEntity<List<AgendamentoResponse>> findAll(
             @RequestParam(required = false) String busca,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dia) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
 
-        List<AgendamentoResponse> agendamentos = agendamentoService.findAll(busca, dia).stream()
+        List<AgendamentoResponse> agendamentos = agendamentoService.findAll(busca, data).stream()
                 .map(AgendamentoMapper::toResponse)
                 .toList();
 
