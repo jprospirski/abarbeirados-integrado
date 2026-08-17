@@ -1,0 +1,409 @@
+/* =============================================================================
+   Agenda — a mesma lista em três formas: cartões, lista e colunas.
+
+   Vale a regra do kit: o raio fica na silhueta do grupo e as divisórias internas
+   ficam retas. Na lista e nas colunas é o `overflow: hidden` que recorta as
+   linhas contra o canto arredondado.
+   ========================================================================== */
+
+.agenda {
+  max-width: 1400px;
+  padding: 22px 20px 48px;
+}
+
+.agenda__topo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.agenda__titulo {
+  margin-top: 6px;
+  font-size: 2rem;
+}
+
+.agenda__acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.agenda__busca {
+  width: 208px;
+}
+
+.agenda__meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 14px 0 18px;
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.agenda__ponto {
+  width: 3px;
+  height: 3px;
+  background: currentcolor;
+}
+
+.agenda__estado {
+  margin-top: 20px;
+  color: var(--cor-texto-suave);
+  font-size: 14px;
+}
+
+/* =============================================================== estado ==
+
+   O seletor de status aparece nas três visões, então a forma mora aqui uma vez
+   só. Campo chapado por status, sem degradê, como manda a linguagem.
+   ======================================================================== */
+
+.estado {
+  padding: 4px 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-minimo);
+  background: transparent;
+  color: var(--cor-texto-suave);
+  font-family: var(--fonte-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.5;
+  }
+
+  &--agendado {
+    border-color: transparent;
+    background: var(--cor-marca-fundo);
+    color: var(--cor-marca);
+  }
+
+  &--confirmado {
+    border-color: transparent;
+    background: var(--cor-ok-fundo);
+    color: var(--cor-ok-texto);
+  }
+
+  &--concluido {
+    border-color: transparent;
+    background: var(--cor-superficie-alta);
+    color: var(--cor-texto-suave);
+  }
+
+  &--cancelado {
+    border-color: transparent;
+    background: var(--cor-perigo-fundo);
+    color: var(--cor-perigo-texto);
+  }
+}
+
+/* ============================================================== cartões == */
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+
+  &:hover {
+    border-color: var(--cor-borda-forte);
+    background: var(--cor-superficie-alta);
+  }
+
+  /* Cancelado recua sem sumir: ainda precisa ser lido e reativado. */
+  &.is-cancelado {
+    background: transparent;
+
+    .cartao__nome,
+    .cartao__valor {
+      color: var(--cor-texto-fraco);
+    }
+  }
+}
+
+.cartao__topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Hora como número grande, que é o dado pelo qual a agenda é lida. */
+.cartao__quando {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+
+  strong {
+    color: var(--cor-texto);
+    font-family: var(--fonte-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+}
+
+.cartao__dia,
+.cartao__num {
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.cartao__nome {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  line-height: 1.15;
+}
+
+.cartao__servico {
+  margin-top: 4px;
+  color: var(--cor-texto-suave);
+  font-size: 13px;
+}
+
+.cartao__obs {
+  margin-top: 8px;
+  padding-left: 9px;
+  border-left: 2px solid var(--cor-borda-forte);
+  color: var(--cor-texto-fraco);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cartao__rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.cartao__valor {
+  color: var(--cor-marca);
+  font-family: var(--fonte-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+/* ================================================================ lista == */
+
+.tabela {
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  overflow: hidden;
+}
+
+.tabela__cabecalho,
+.tabela__linha {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1.4fr) minmax(0, 1.4fr) 96px 116px;
+  gap: 14px;
+  align-items: center;
+  padding: 11px 16px;
+}
+
+.tabela__cabecalho {
+  border-bottom: 1px solid var(--cor-borda);
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tabela__linha {
+  font-size: 13.5px;
+  transition: background 0.12s ease;
+
+  &+& {
+    border-top: 1px solid var(--cor-borda);
+  }
+
+  &:hover {
+    background: var(--cor-superficie-alta);
+  }
+
+  &.is-cancelado {
+    color: var(--cor-texto-fraco);
+  }
+}
+
+.tabela__quando {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+
+  strong {
+    font-family: var(--fonte-mono);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.tabela__dia,
+.tabela__telefone {
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.tabela__cliente {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.tabela__valor {
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+}
+
+/* ============================================================== colunas == */
+
+.quadro {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.coluna {
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  overflow: hidden;
+}
+
+.coluna__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.coluna__conta {
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.coluna__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.coluna__vazia {
+  padding: 8px 4px;
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Aqui o raio desce para a peça: a quantidade varia e o grupo não tem retângulo
+   para arredondar, então os blocos viram fichas soltas. */
+.ficha {
+  padding: 10px 11px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--cor-fundo);
+}
+
+.ficha__topo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+
+  strong {
+    font-family: var(--fonte-mono);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+}
+
+.ficha__dia {
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+}
+
+.ficha__nome {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ficha__servico {
+  margin-top: 2px;
+  color: var(--cor-texto-suave);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.estado--mover {
+  width: 100%;
+  margin-top: 9px;
+}
+
+/* Abaixo de 1100px o quadro de 4 colunas não cabe: vira 2 x 2. */
+@media (max-width: 1100px) {
+  .quadro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tabela__cabecalho,
+  .tabela__linha {
+    grid-template-columns: 78px minmax(0, 1.4fr) minmax(0, 1fr) 116px;
+  }
+
+  .tabela__cabecalho span:nth-child(4),
+  .tabela__linha .tabela__valor {
+    display: none;
+  }
+}
