@@ -1,0 +1,41 @@
+# PostgreSQL 18 para o desenvolvimento.
+#
+#   docker compose up -d     sobe o banco
+#   docker compose down      derruba, preservando os dados
+#   docker compose down -v   derruba e apaga os dados
+#
+# As variaveis abaixo sao as MESMAS que o application.properties le, e com os
+# mesmos padroes. Isso e proposital: `export DB_PORT=5433` reconfigura o container
+# e o backend de uma vez, sem chance de um apontar para um lugar e o outro para
+# outro. Numa maquina limpa nao e preciso exportar nada.
+#
+# Usar o container e opcional: um PostgreSQL 18 instalado na maquina, com base
+# `abarbeirados` e usuario `postgres`, atende igual.
+
+services:
+  banco:
+    image: postgres:18-alpine
+    container_name: abarbeirados-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-abarbeirados}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      # So a porta do HOST varia. Dentro do container o Postgres fica sempre na
+      # 5432, entao quem ja tiver outro banco na 5432 da maquina — outro projeto,
+      # uma instalacao nativa — sobe este com DB_PORT=5433 e segue.
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # /var/lib/postgresql, e nao /var/lib/postgresql/data: a imagem da 18 moveu
+      # o PGDATA para /var/lib/postgresql/18/docker. Montar o caminho antigo faz
+      # o container subir normalmente e perder tudo no `down`.
+      - dados:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-abarbeirados}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dados:
