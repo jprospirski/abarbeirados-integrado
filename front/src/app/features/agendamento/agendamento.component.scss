@@ -13,11 +13,13 @@
   padding: 22px 24px 48px;
 }
 
+/* Sem `align-items: start`: as duas colunas esticam até a altura da linha, que é
+   dada pelo painel do formulário. É assim que o resumo acompanha a altura do
+   cadastro em vez de parar na altura do próprio conteúdo. */
 .agendar__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 318px;
+  grid-template-columns: minmax(0, 1fr) 500px;
   gap: 14px;
-  align-items: start;
 }
 
 /* ----------------------------------------------------------- card unico -- */
@@ -270,14 +272,18 @@
 
 /* --------------------------------------------------------------- trilho -- */
 
+/* Sem `position: sticky`: o cartão agora tem a altura da linha inteira, então não
+   sobra curso para ele deslizar — grudar no topo virou efeito nenhum. */
 .trilho {
-  position: sticky;
-  top: 22px;
+  display: flex;
   min-width: 0;
 }
 
 .comprovante {
   position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 22px 20px;
   border: 1px solid var(--cor-borda-forte);
   border-radius: var(--raio);
@@ -293,8 +299,11 @@
     background: var(--cor-marca-cheia);
   }
 
+  /* `auto` em vez de uma medida fixa: com o cartão esticado, a sobra de altura
+     vai toda para cima do botão e ele fica ancorado na base. Quando não há
+     sobra, o respiro de 18px vem do margin-bottom do total. */
   .botao-principal {
-    margin-top: 18px;
+    margin-top: auto;
   }
 }
 
@@ -362,6 +371,8 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  /* Garante o respiro abaixo do total mesmo quando o botão sobe para a base. */
+  margin-bottom: 18px;
 }
 
 .comprovante__rotulo-total {
@@ -384,13 +395,11 @@
 
 /* ------------------------------------------------------------ responsivo -- */
 
-@media (max-width: 1020px) {
+/* Sobe de 1020px porque a coluna do resumo passou de 318px para 500px: abaixo
+   disto o painel do formulário ficaria mais estreito que o próprio resumo. */
+@media (max-width: 1280px) {
   .agendar__grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .trilho {
-    position: static;
   }
 }
 
