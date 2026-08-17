@@ -40,22 +40,51 @@ regras de negócio seguem em aberto — o desenvolvimento avança sobre o domín
 
 **Onde cada critério é atendido:**
 
-- **1** — pacote base `uniamerica.abarbeirados`. Nenhum vestígio de `com.example.demo`.
-- **2** — três CRUDs completos: `Cliente`, `Servico` e `Agendamento`.
-- **3** — 17 endpoints, usando `GET`, `POST`, `PUT`, `PATCH` e `DELETE`.
-- **4** — `201` na criação, `200` na leitura e atualização, `204` na exclusão,
-  `400` em validação, `404` em recurso inexistente, `409` em violação de integridade.
-- **5** — todo retorno passa por DTO; os erros usam o formato único `ApiError`.
-- **6** — `@PathVariable` em `/{id}`, `@RequestParam` nos filtros de listagem
-  (`?nome=`, `?busca=`, `?data=`, `?apenasAtivos=`) e `@RequestBody` nos
-  `POST` / `PUT` / `PATCH`.
-- **7** — camadas separadas em `controller`, `service`, `repository`, `mapper`,
-  `dto`, `model`, `exception` e `config`.
-- **8** — Lombok nas entidades (`@Getter`, `@Setter`, `@Builder`) e nos controllers
-  e services (`@RequiredArgsConstructor`); `record` em todos os DTOs de Cliente,
-  Serviço e Agendamento.
-- **9** — DTOs separados por operação (`ClienteRequest` / `ClienteResponse`), sem
-  expor a entidade JPA diretamente.
+**1 · Pacotes** — o pacote base é `uniamerica.abarbeirados`, definido na geração do
+projeto. Nenhum vestígio de `com.example.demo` em nenhum arquivo.
+
+**2 · CRUD completo** — três entidades com o ciclo inteiro (criar, listar, buscar,
+atualizar, excluir), cada uma com model, repository, service, mapper e DTOs
+próprios: `Cliente`, `Servico` e `Agendamento`.
+
+**3 · Verbos** — 17 endpoints usando os cinco verbos: `GET` (7), `POST` (3),
+`PUT` (3), `PATCH` (1) e `DELETE` (3). O `PATCH` é do avanço de status do
+agendamento, que altera um campo só e por isso não é um `PUT`.
+
+**4 · Códigos HTTP**
+
+| Situação | Código |
+|---|---|
+| Criação | `201 Created` |
+| Leitura e atualização | `200 OK` |
+| Exclusão | `204 No Content` |
+| Erro de validação | `400 Bad Request` |
+| Recurso ou rota inexistente | `404 Not Found` |
+| Exclusão de registro em uso | `409 Conflict` |
+
+**5 · Retorno estruturado** — nenhum endpoint devolve entidade JPA: tudo passa por
+DTO de resposta. Os erros seguem o formato único `ApiError`, montado no
+`GlobalException`, com `fields` campo a campo quando é validação.
+
+**6 · Parâmetros** — `@PathVariable` em todas as rotas `/{id}` (10 usos),
+`@RequestParam` nos filtros de listagem (5 usos: `?nome=`, `?busca=`, `?data=`,
+`?apenasAtivos=`) e `@RequestBody` nos `POST`, `PUT` e `PATCH` (7 usos).
+
+**7 · MVC** — oito camadas separadas: `controller`, `service`, `repository`,
+`mapper`, `dto`, `model`, `exception` e `config`. O controller só conhece DTOs — a
+entidade JPA não é importada por nenhum dos três. A regra de negócio e o acesso ao
+repositório ficam no service, que é o único a montar entidade, e a conversão
+entidade ↔ DTO fica isolada nos mappers, todos `@Component` injetados.
+
+**8 · Lombok e `record`** — Lombok em 9 arquivos: `@Getter`, `@Setter`,
+`@NoArgsConstructor`, `@AllArgsConstructor` e `@Builder` nas entidades;
+`@RequiredArgsConstructor` nos controllers e services, que dispensa o
+`@Autowired` em campo. `record` nos 9 DTOs, sem exceção.
+
+**9 · DTOs** — request e response separados por operação
+(`ClienteRequest` / `ClienteResponse`), agrupados por domínio em
+`dto/cliente`, `dto/servico`, `dto/agendamento` e `dto/error`. A entrada carrega
+as anotações de validação; a saída expõe só o que a tela precisa ver.
 
 ### O que deve ser entregue
 

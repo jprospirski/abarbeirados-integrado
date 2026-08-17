@@ -1,8 +1,16 @@
 package uniamerica.abarbeirados.service;
 
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
 import uniamerica.abarbeirados.dto.agendamento.AgendaDoDiaResponse;
 import uniamerica.abarbeirados.dto.agendamento.AgendamentoRequest;
 import uniamerica.abarbeirados.dto.agendamento.AgendamentoResponse;
@@ -16,13 +24,6 @@ import uniamerica.abarbeirados.repository.AgendamentoRepository;
 import uniamerica.abarbeirados.repository.ClienteRepository;
 import uniamerica.abarbeirados.repository.ServicoRepository;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 public class AgendamentoService {
@@ -30,99 +31,96 @@ public class AgendamentoService {
     private final AgendamentoRepository agendamentoRepository;
     private final ClienteRepository clienteRepository;
     private final ServicoRepository servicoRepository;
+    private final AgendamentoMapper agendamentoMapper;
 
     @Transactional
-    public Agendamento save(AgendamentoRequest request) {
+    public AgendamentoResponse criar(AgendamentoRequest request) {
         Cliente cliente = buscarCliente(request.clienteId());
         Servico servico = buscarServico(request.servicoId());
 
-        Agendamento agendamento = AgendamentoMapper.toEntity(request, cliente, servico);
-        return agendamentoRepository.save(agendamento);
+        Agendamento agendamento = agendamentoMapper.forEntity(request, cliente, servico);
+        return agendamentoMapper.forResponse(agendamentoRepository.save(agendamento));
     }
 
-    public Agendamento findById(Long id) {
-        return agendamentoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado com id: " + id));
+    @Transactional(readOnly = true)
+    public List<AgendamentoResponse> listar(String busca, LocalDate data) {
+        return agendamentoRepository.findAll().stream()
+                .filter(agendamento -> combinaComBusca(agendamento, busca))
+                .filter(agendamento -> data == null || agendamento.getDataHora().toLocalDate().equals(data))
+                .sorted(Comparator.comparing(Agendamento::getDataHora))
+                .map(agendamentoMapper::forResponse)
+                .toList();
     }
 
-    public List<Agendamento> findAll(String busca, LocalDate data) {
-        List<Agendamento> todos = agendamentoRepository.findAll();
-        List<Agendamento> resultado = new ArrayList<>();
-
-        for (Agendamento a : todos) {
-            boolean passaBusca = busca == null || busca.isBlank()
-                    || a.getCliente().getNome().toLowerCase().contains(busca.toLowerCase())
-                    || a.getServico().getNome().toLowerCase().contains(busca.toLowerCase());
-
-            boolean passaData = data == null || a.getDataHora().toLocalDate().equals(data);
-
-            if (passaBusca && passaData) {
-                resultado.add(a);
-            }
-        }
-
-        resultado.sort(Comparator.comparing(Agendamento::getDataHora));
-        return resultado;
+    @Transactional(readOnly = true)
+    public AgendamentoResponse buscarPorId(Long id) {
+        return agendamentoMapper.forResponse(buscarEntidadePorId(id));
     }
 
-    public List<AgendaDoDiaResponse> getAgendaAgrupadaPorDia() {
-        List<Agendamento> agendamentos = agendamentoRepository.findAll();
-
-        // Agrupa manualmente os agendamentos por dia
+    /** A agenda inteira agrupada por dia, em ordem cronológica. */
+    @Transactional(readOnly = true)
+    public List<AgendaDoDiaResponse> agendaAgrupadaPorDia() {
         Map<LocalDate, List<AgendamentoResponse>> agrupado = new LinkedHashMap<>();
 
-        for (Agendamento a : agendamentos) {
-            LocalDate dia = a.getDataHora().toLocalDate();
-
-            if (!agrupado.containsKey(dia)) {
-                agrupado.put(dia, new ArrayList<>());
-            }
-            agrupado.get(dia).add(AgendamentoMapper.toResponse(a));
+        for (AgendamentoResponse agendamento : listar(null, null)) {
+            agrupado.computeIfAbsent(agendamento.dataHora().toLocalDate(), dia -> new ArrayList<>())
+                    .add(agendamento);
         }
 
-        // Monta a lista final de AgendaDoDiaResponse a partir do mapa agrupado
-        List<AgendaDoDiaResponse> resultado = new ArrayList<>();
-        for (Map.Entry<LocalDate, List<AgendamentoResponse>> entry : agrupado.entrySet()) {
-            resultado.add(new AgendaDoDiaResponse(entry.getKey(), entry.getValue()));
-        }
-
-        resultado.sort(Comparator.comparing(AgendaDoDiaResponse::getDia));
-        return resultado;
+        return agrupado.entrySet().stream()
+                .map(entrada -> new AgendaDoDiaResponse(entrada.getKey(), entrada.getValue()))
+                .sorted(Comparator.comparing(AgendaDoDiaResponse::dia))
+                .toList();
     }
 
     @Transactional
-    public Agendamento update(Long id, AgendamentoRequest request) {
-        Agendamento existing = findById(id);
+    public AgendamentoResponse atualizar(Long id, AgendamentoRequest request) {
+        Agendamento agendamento = buscarEntidadePorId(id);
         Cliente cliente = buscarCliente(request.clienteId());
         Servico servico = buscarServico(request.servicoId());
 
-        AgendamentoMapper.updateEntity(existing, request, cliente, servico);
-        return agendamentoRepository.save(existing);
+        agendamentoMapper.updateEntity(request, agendamento, cliente, servico);
+        return agendamentoMapper.forResponse(agendamentoRepository.save(agendamento));
     }
 
     @Transactional
-    public Agendamento updateStatus(Long id, AtualizarStatusRequest request) {
-        Agendamento existing = findById(id);
+    public AgendamentoResponse atualizarStatus(Long id, AtualizarStatusRequest request) {
+        Agendamento agendamento = buscarEntidadePorId(id);
 
-        existing.setStatus(request.getStatus());
-        return agendamentoRepository.save(existing);
+        agendamento.setStatus(request.status());
+        return agendamentoMapper.forResponse(agendamentoRepository.save(agendamento));
     }
 
     @Transactional
-    public void deleteById(Long id) {
-        if (!agendamentoRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Agendamento não encontrado com id: " + id);
+    public void excluir(Long id) {
+        Agendamento agendamento = buscarEntidadePorId(id);
+        agendamentoRepository.delete(agendamento);
+    }
+
+    /** Busca livre pelo nome do cliente ou do serviço. */
+    private boolean combinaComBusca(Agendamento agendamento, String busca) {
+        if (busca == null || busca.isBlank()) {
+            return true;
         }
-        agendamentoRepository.deleteById(id);
+
+        String termo = busca.toLowerCase();
+
+        return agendamento.getCliente().getNome().toLowerCase().contains(termo)
+                || agendamento.getServico().getNome().toLowerCase().contains(termo);
+    }
+
+    private Agendamento buscarEntidadePorId(Long id) {
+        return agendamentoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado com id " + id));
     }
 
     private Cliente buscarCliente(Long id) {
         return clienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com id " + id));
     }
 
     private Servico buscarServico(Long id) {
         return servicoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Serviço não encontrado com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Serviço não encontrado com id " + id));
     }
 }
