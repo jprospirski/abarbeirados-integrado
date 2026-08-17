@@ -1,6 +1,11 @@
 package uniamerica.abarbeirados.dto.agendamento;
 
+import java.time.LocalDate;
+import java.util.List;
+
+/** Os agendamentos de um dia, agrupados para a agenda. */
 public record AgendaDoDiaResponse(
-        // TODO: usado na tela de dashboard, representa os agendamentos de um dia especifico
+        LocalDate dia,
+        List<AgendamentoResponse> agendamentos
 ) {
 }
