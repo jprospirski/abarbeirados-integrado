@@ -16,7 +16,7 @@ regras de negócio seguem em aberto — o desenvolvimento avança sobre o domín
 |---|---|
 | Backend (Spring Boot) | CRUD completo de Cliente, Serviço e Agendamento |
 | Frontend (Angular) | Listagem de agendamentos e formulário de marcação, consumindo a API |
-| Banco de dados | H2 em memória (provisório) → PostgreSQL 18 |
+| Banco de dados | PostgreSQL 18, com dados persistentes |
 | Especificação do demandante | Pendente |
 
 ---
@@ -113,20 +113,21 @@ as anotações de validação; a saída expõe só o que a tela precisa ver.
 | | Spring Boot | 4.1.0 | Web MVC + Data JPA |
 | | Maven | 3.9.16 | Via wrapper (`mvnw`), sem instalação |
 | | Lombok | — | Gerenciado pelo Spring Boot |
-| Banco | H2 | — | Provisório, em memória |
-| | PostgreSQL | 18 | Definitivo — não integrado ainda |
+| Banco | PostgreSQL | 18 | Banco da aplicação |
+| | H2 | — | Só nos testes, em memória |
 | Frontend | Angular | 19 | Listagem e formulário de agendamento |
 | | Node.js | 20.11+ | Ver nota abaixo |
-| Apoio | DBeaver, IntelliJ IDEA | — | Cliente do banco e IDE do time |
+| Apoio | Docker Compose | — | Sobe o PostgreSQL sem instalar nada |
+| | DBeaver, IntelliJ IDEA | — | Cliente do banco e IDE do time |
 
 > **Node.js:** o Angular 19 exige `^18.19.1`, `^20.11.1` ou `^22.x`. A linha 14 não é
 > suportada e falha na instalação do Angular CLI. Use **20.11 LTS ou superior**.
 > O Node 24 compila e roda, mas o CLI o marca como *Unsupported* — se aparecer erro
 > estranho no `ng serve`, essa é a primeira suspeita.
 
-> **Spring Boot 4** renomeou artefatos: `starter-web` virou `starter-webmvc`,
-> `starter-test` foi dividido em `webmvc-test` e `data-jpa-test`, e o console H2 é o
-> módulo `spring-boot-h2console`. Tutoriais de Boot 2/3 quebram o build — consulte a
+> **Spring Boot 4** renomeou artefatos: `starter-web` virou `starter-webmvc` e
+> `starter-test` foi dividido em `webmvc-test` e `data-jpa-test`. Tutoriais de
+> Boot 2/3 quebram o build — consulte a
 > [documentação da 4.1.0](https://docs.spring.io/spring-boot/4.1.0/).
 
 ---
@@ -134,6 +135,8 @@ as anotações de validação; a saída expõe só o que a tela precisa ver.
 ## Estrutura
 
 ```
+docker-compose.yml    PostgreSQL 18 para o desenvolvimento
+
 back/src/main/java/uniamerica/abarbeirados/
 ├── config/       WebConfig (CORS)
 ├── controller/   Cliente, Servico, Agendamento
@@ -143,6 +146,13 @@ back/src/main/java/uniamerica/abarbeirados/
 ├── model/        entidades JPA e o enum StatusAgendamento
 ├── repository/   interfaces JpaRepository
 └── service/      regras de negócio
+
+back/src/main/resources/
+├── application.properties   conexão com o PostgreSQL, via variáveis de ambiente
+└── data.sql                 catálogo de serviços, com INSERT repetível
+
+back/src/test/resources/
+└── application.properties   H2 em memória, só para os testes
 
 front/src/app/
 ├── core/         models, services e utilitários compartilhados
@@ -209,6 +219,49 @@ Em erro de validação, `fields` traz o motivo campo a campo.
 
 ## Como executar
 
+### Banco de dados
+
+O backend não sobe sem o PostgreSQL no ar, então este é o primeiro passo.
+
+**Com Docker** (caminho recomendado — não exige instalar o PostgreSQL):
+
+```bash
+docker compose up -d      # na raiz do projeto
+```
+
+**Sem Docker:** instale o **PostgreSQL 18** e crie uma base `abarbeirados`. Os
+padrões esperados são `localhost:5432`, usuário `postgres`, senha `postgres`.
+
+Qualquer um dos dois caminhos serve — o backend não sabe a diferença.
+
+> **Porta 5432 ocupada?** Acontece quando já existe outro PostgreSQL na máquina.
+> Exporte a porta alternativa antes de subir qualquer coisa:
+>
+> ```bash
+> export DB_PORT=5433
+> ```
+>
+> A mesma variável é lida pelo `docker-compose.yml` e pelo `application.properties`,
+> então o container e o backend se movem juntos e não há como um apontar para um
+> lugar e o outro para outro. Vale o mesmo para `DB_HOST`, `DB_NAME`, `DB_USER` e
+> `DB_PASSWORD`.
+
+**Inspecionar o banco** (DBeaver, IntelliJ ou `psql`):
+
+| Campo | Valor |
+|---|---|
+| Host / Porta | `localhost` / `5432` |
+| Base | `abarbeirados` |
+| Usuário | `postgres` |
+| Senha | `postgres` |
+
+O esquema é criado pelo Hibernate na primeira execução (`ddl-auto=update`), e o
+`data.sql` insere o catálogo de serviços. Esse catálogo **não é dado de teste**: a
+tela de agendamento traduz a combinação marcada no carrinho para um serviço
+procurando pelo nome, então sem ele não há o que agendar. O script roda a cada
+inicialização, mas cada `INSERT` é condicionado a um `WHERE NOT EXISTS` — reiniciar
+não duplica nada.
+
 ### Backend
 
 **Pelo IntelliJ IDEA** (caminho padrão do time): abra a pasta do projeto, confirme o
@@ -226,18 +279,20 @@ mvnw.cmd spring-boot:run    # Windows
 > O terminal exige `java` no `PATH` e `JAVA_HOME` apontando para o JDK 17. Quem usa
 > apenas o IntelliJ não precisa configurar nada — a IDE resolve o JDK internamente.
 
-A aplicação sobe em `http://localhost:8080`.
+A aplicação sobe em `http://localhost:8080`. Se o banco não estiver no ar, o boot
+falha na criação do pool de conexões — é o sintoma esperado, não um defeito.
 
-**Banco de dados:** o H2 em memória é criado na inicialização, sem credenciais a
-configurar. Os dados são perdidos a cada reinicialização — esperado nesta fase.
+**Testes:**
 
-**Console do H2:** `http://localhost:8080/h2-console`
+```bash
+cd back
+./mvnw test
+```
 
-| Campo | Valor |
-|---|---|
-| JDBC URL | `jdbc:h2:mem:abarbeirados` |
-| User Name | `sa` |
-| Password | *(em branco)* |
+Os testes usam **H2 em memória**, e não o PostgreSQL: o teste de contexto sobe a
+aplicação inteira, e amarrá-lo ao banco real faria `./mvnw test` falhar em toda
+máquina que ainda não tivesse subido o container. A configuração de teste fica em
+`back/src/test/resources/application.properties`.
 
 ### Frontend
 
@@ -275,7 +330,7 @@ Exemplo: `feat: adiciona endpoint de listagem de clientes`
 - [x] Formulário de marcação (frontend)
 - [x] Listagem de agendamentos com troca de status (frontend)
 - [x] Ligar o frontend à API — não há mais dado em memória
-- [ ] Migrar de H2 para PostgreSQL 18
+- [x] Migrar de H2 para PostgreSQL 18
 - [ ] Validar conflito de horário no backend (dois agendamentos no mesmo intervalo)
 - [ ] Permitir valor e duração personalizados no agendamento (caso da Química)
 - [ ] Telas de manutenção de Cliente e Serviço — o CRUD dos dois já existe na API
