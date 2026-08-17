@@ -56,16 +56,27 @@
       <h2 class="rotulo">Filtrar por dia</h2>
 
       <div class="filtro__controles">
-        <span class="filtro__mes">{{ tituloMes() }}</span>
-        <button type="button" class="botao-secundario" (click)="irParaHoje()">
+        <button
+          type="button"
+          class="botao-secundario"
+          [class.is-ativo]="diaSelecionado() === hoje"
+          [attr.aria-pressed]="diaSelecionado() === hoje"
+          (click)="irParaHoje()"
+        >
           Hoje
         </button>
-        @if (diaSelecionado()) {
-          <button type="button" class="botao-secundario" (click)="limparDia()">
-            Todos os dias
-          </button>
-        }
+        <button
+          type="button"
+          class="botao-secundario"
+          [class.is-ativo]="!diaSelecionado()"
+          [attr.aria-pressed]="!diaSelecionado()"
+          (click)="limparDia()"
+        >
+          Todos os dias
+        </button>
       </div>
+
+      <span class="filtro__mes">{{ tituloMes() }}</span>
     </div>
 
     <div class="semana">

@@ -302,6 +302,15 @@ textarea {
     background: var(--cor-marca-fundo);
     color: var(--cor-marca);
   }
+
+  /* Depois do :hover de propósito — botão marcado continua marcado sob o mouse.
+     Mesmo campo chapado do alternador, para os dois lerem como um estado só. */
+  &.is-ativo {
+    border-color: transparent;
+    background: var(--cor-marca-cheia);
+    color: var(--cor-sobre-marca);
+    font-weight: 600;
+  }
 }
 
 /**

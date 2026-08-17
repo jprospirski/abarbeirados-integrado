@@ -6,9 +6,11 @@
    ele é que recorta as células retas contra o canto arredondado do grupo.
    ========================================================================== */
 
+/* Sem trava de largura: o conteúdo ocupa a área toda que sobra da lateral. Com
+   um max-width e sem centragem, tudo encostava à esquerda e deixava um vão morto
+   à direita em telas largas. */
 .agendar {
-  max-width: 1400px;
-  padding: 22px 20px 48px;
+  padding: 22px 24px 48px;
 }
 
 .agendar__grid {
