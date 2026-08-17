@@ -1,13 +1,46 @@
-import { DecimalPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { Servico } from '../../core/models/servico.model';
 
-/** Lista de servicos com busca por nome. Consome GET /api/servicos. */
+/**
+ * O cartao mostra dois numeros que a API nao devolve prontos: a duracao escrita
+ * por extenso e quanto o servico rende por minuto de cadeira ocupada. Ambos sao
+ * calculados uma vez na chegada, e nao no template, para nao recalcular a cada
+ * ciclo de deteccao de mudanca.
+ */
+interface ServicoCartao extends Servico {
+  duracaoRotulo: string;
+  valorPorMinuto: number;
+}
+
+/** Formata 40 como "40 min", 60 como "1h" e 80 como "1h20". */
+function formatarDuracao(minutos: number): string {
+  if (minutos < 60) {
+    return `${minutos} min`;
+  }
+
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+
+  return resto === 0 ? `${horas}h` : `${horas}h${String(resto).padStart(2, '0')}`;
+}
+
+function paraCartao(servico: Servico): ServicoCartao {
+  return {
+    ...servico,
+    duracaoRotulo: formatarDuracao(servico.duracaoMinutos),
+    // Guarda contra duracao zerada vinda do banco: dividir por zero viraria
+    // Infinity e o cartao imprimiria "R$ ∞".
+    valorPorMinuto: servico.duracaoMinutos > 0 ? servico.valor / servico.duracaoMinutos : 0,
+  };
+}
+
+/** Catalogo de servicos. Consome GET /api/servicos. */
 @Component({
   selector: 'app-servico',
-  imports: [DecimalPipe],
+  imports: [CurrencyPipe],
   templateUrl: './servico.component.html',
   styleUrl: './servico.component.scss',
 })
@@ -16,34 +49,76 @@ export class ServicoComponent implements OnInit {
   // O proxy.conf.json manda /api para a 8080, entao nao ha CORS em `ng serve`.
   private readonly apiUrl = '/api/servicos';
 
-  servicos: Servico[] = [];
-  busca = '';
-  carregando = true;
-  erro = '';
+  protected readonly servicos = signal<ServicoCartao[]>([]);
+  protected readonly busca = signal('');
+  protected readonly carregando = signal(true);
+  protected readonly erro = signal('');
+  /** Espelha o ?apenasAtivos= do endpoint. */
+  protected readonly apenasAtivos = signal(false);
 
-  get servicosFiltrados(): Servico[] {
-    const termo = this.busca.trim().toLowerCase();
+  /*
+   * A busca por nome fica no cliente: o catalogo e curto e filtrar local evita
+   * uma requisicao por tecla digitada. Ja o recorte de ativos vai ao servidor,
+   * porque e o proprio endpoint que sabe a regra.
+   */
+  protected readonly servicosFiltrados = computed(() => {
+    const termo = this.busca().trim().toLowerCase();
+
     return termo
-      ? this.servicos.filter((servico) =>
-          servico.nome.toLowerCase().includes(termo),
-        )
-      : this.servicos;
-  }
+      ? this.servicos().filter((servico) => servico.nome.toLowerCase().includes(termo))
+      : this.servicos();
+  });
+
+  /** Rodape do cabecalho: quantos, quantos ativos e a faixa de preco. */
+  protected readonly resumo = computed(() => {
+    const lista = this.servicosFiltrados();
+
+    if (lista.length === 0) {
+      return null;
+    }
+
+    const valores = lista.map((servico) => servico.valor);
+
+    return {
+      total: lista.length,
+      ativos: lista.filter((servico) => servico.ativo).length,
+      menorValor: Math.min(...valores),
+      maiorValor: Math.max(...valores),
+    };
+  });
 
   ngOnInit(): void {
-    this.http.get<Servico[]>(this.apiUrl).subscribe({
-      next: (servicos) => {
-        this.servicos = servicos;
-        this.carregando = false;
-      },
-      error: () => {
-        this.erro = 'Não foi possível carregar os serviços.';
-        this.carregando = false;
-      },
-    });
+    this.carregar();
   }
 
-  atualizarBusca(event: Event): void {
-    this.busca = (event.target as HTMLInputElement).value;
+  protected definirEscopo(apenasAtivos: boolean): void {
+    if (this.apenasAtivos() === apenasAtivos) {
+      return;
+    }
+
+    this.apenasAtivos.set(apenasAtivos);
+    this.carregar();
+  }
+
+  protected atualizarBusca(event: Event): void {
+    this.busca.set((event.target as HTMLInputElement).value);
+  }
+
+  private carregar(): void {
+    this.carregando.set(true);
+    this.erro.set('');
+
+    const url = this.apenasAtivos() ? `${this.apiUrl}?apenasAtivos=true` : this.apiUrl;
+
+    this.http.get<Servico[]>(url).subscribe({
+      next: (servicos) => {
+        this.servicos.set(servicos.map(paraCartao));
+        this.carregando.set(false);
+      },
+      error: () => {
+        this.erro.set('Não foi possível carregar os serviços.');
+        this.carregando.set(false);
+      },
+    });
   }
 }

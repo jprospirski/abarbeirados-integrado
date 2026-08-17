@@ -1,24 +1,90 @@
-<main class="pagina">
-  <header>
-    <h1>Serviços</h1>
-    <input type="search" placeholder="Pesquisar serviço" aria-label="Pesquisar serviço" (input)="atualizarBusca($event)" />
+<section class="catalogo">
+  <header class="catalogo__topo">
+    <div class="catalogo__id">
+      <p class="rotulo">02 Catálogo</p>
+      <h1 class="catalogo__titulo">Serviços</h1>
+    </div>
+
+    <div class="catalogo__acoes">
+      <div class="alternador" role="group" aria-label="Escopo da listagem">
+        <button
+          type="button"
+          class="alternador__op"
+          [class.is-ativo]="!apenasAtivos()"
+          [attr.aria-pressed]="!apenasAtivos()"
+          (click)="definirEscopo(false)"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          class="alternador__op"
+          [class.is-ativo]="apenasAtivos()"
+          [attr.aria-pressed]="apenasAtivos()"
+          (click)="definirEscopo(true)"
+        >
+          Ativos
+        </button>
+      </div>
+
+      <input
+        type="search"
+        class="campo__entrada catalogo__busca"
+        placeholder="Pesquisar serviço"
+        aria-label="Pesquisar serviço"
+        (input)="atualizarBusca($event)"
+      />
+    </div>
   </header>
 
-  @if (carregando) {
-  <p>Carregando serviços...</p>
-  } @else if (erro) {
-  <p class="mensagem-erro">{{ erro }}</p>
-  } @else if (servicosFiltrados.length === 0) {
-  <p>Nenhum serviço encontrado.</p>
+  <hr class="regua" />
+
+  @if (carregando()) {
+    <p class="catalogo__estado">Carregando serviços...</p>
+  } @else if (erro()) {
+    <p class="alerta alerta--erro">{{ erro() }}</p>
+  } @else if (servicosFiltrados().length === 0) {
+    <p class="catalogo__estado">Nenhum serviço encontrado.</p>
   } @else {
-  <section class="lista-cards" aria-label="Lista de serviços">
-    @for (servico of servicosFiltrados; track servico.id) {
-    <article class="card">
-      <h2>{{ servico.nome }}</h2>
-      <p>R$ {{ servico.valor | number:'1.2-2' }}</p>
-      <small>{{ servico.duracaoMinutos }} min</small>
-    </article>
+    @if (resumo(); as r) {
+      <p class="catalogo__meta">
+        {{ r.total }} {{ r.total === 1 ? 'serviço' : 'serviços' }}
+        <span class="catalogo__ponto" aria-hidden="true"></span>
+        {{ r.ativos }} {{ r.ativos === 1 ? 'ativo' : 'ativos' }}
+        <span class="catalogo__ponto" aria-hidden="true"></span>
+        {{ r.menorValor | currency: 'BRL' }} &ndash; {{ r.maiorValor | currency: 'BRL' }}
+      </p>
     }
-  </section>
+
+    <ul class="cartoes">
+      @for (servico of servicosFiltrados(); track servico.id) {
+        <li class="cartao" [class.is-inativo]="!servico.ativo">
+          <div class="cartao__topo">
+            <span class="cartao__num">{{ servico.id.toString().padStart(2, '0') }}</span>
+            <span
+              class="cartao__selo"
+              [class.cartao__selo--ativo]="servico.ativo"
+            >
+              {{ servico.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+
+          <h2 class="cartao__nome">{{ servico.nome }}</h2>
+
+          <p class="cartao__valor">{{ servico.valor | currency: 'BRL' }}</p>
+
+          <dl class="cartao__dados">
+            <div class="cartao__dado">
+              <dt>Duração</dt>
+              <dd>{{ servico.duracaoRotulo }}</dd>
+            </div>
+            <div class="cartao__dado">
+              <dt>Por minuto</dt>
+              <dd>{{ servico.valorPorMinuto | currency: 'BRL' }}</dd>
+            </div>
+          </dl>
+        </li>
+      }
+    </ul>
   }
-</main>
+</section>

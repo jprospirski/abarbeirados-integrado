@@ -1,8 +1,185 @@
-:host { display: block; font-family: Arial, sans-serif; }
-.pagina { max-width: 960px; margin: 0 auto; padding: 24px; }
-header { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-.lista-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
-.card { padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
-.card h2, .card p { margin: 0 0 8px; }
-.mensagem-erro { color: #b42318; }
+/* =============================================================================
+   Catálogo de serviços — grade de cartões.
+
+   Cada cartão é um conjunto contíguo, então vale a regra do kit: o raio fica na
+   silhueta e as divisórias internas ficam retas. É o `overflow: hidden` que
+   recorta a faixa de dados contra o canto arredondado.
+   ========================================================================== */
+
+.catalogo {
+  max-width: 1400px;
+  padding: 22px 20px 48px;
+}
+
+.catalogo__topo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.catalogo__titulo {
+  margin-top: 6px;
+  font-size: 2rem;
+}
+
+.catalogo__acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.catalogo__busca {
+  width: 232px;
+}
+
+/* Linha de agregados logo abaixo do fio, em mono, como legenda editorial. */
+.catalogo__meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 14px 0 18px;
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.catalogo__ponto {
+  width: 3px;
+  height: 3px;
+  background: currentcolor;
+}
+
+.catalogo__estado {
+  margin-top: 20px;
+  color: var(--cor-texto-suave);
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------- cartoes --- */
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  overflow: hidden;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+
+  &:hover {
+    border-color: var(--cor-borda-forte);
+    background: var(--cor-superficie-alta);
+  }
+
+  /* Serviço fora de catálogo: recua sem sumir — ainda precisa ser lido. */
+  &.is-inativo {
+    background: transparent;
+
+    .cartao__nome,
+    .cartao__valor {
+      color: var(--cor-texto-fraco);
+    }
+  }
+}
+
+.cartao__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 0;
+}
+
+/* Número grande como elemento gráfico, no mesmo tom da numeração da lateral. */
+.cartao__num {
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.cartao__selo {
+  padding: 3px 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-minimo);
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &--ativo {
+    border-color: transparent;
+    background: var(--cor-ok-fundo);
+    color: var(--cor-ok-texto);
+  }
+}
+
+.cartao__nome {
+  padding: 10px 16px 0;
+  font-size: 0.98rem;
+  line-height: 1.15;
+}
+
+.cartao__valor {
+  padding: 8px 16px 16px;
+  color: var(--cor-marca);
+  font-family: var(--fonte-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  /* Empurra a faixa de dados para a base quando os nomes têm alturas
+     diferentes, senão a grade fica com as faixas desalinhadas. */
+  margin-top: auto;
+}
+
+/* Faixa de dados: separada por fio, e dividida por outro fio no meio. */
+.cartao__dados {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.cartao__dado {
+  padding: 10px 16px;
+
+  &+& {
+    border-left: 1px solid var(--cor-borda);
+  }
+
+  dt {
+    color: var(--cor-texto-fraco);
+    font-family: var(--fonte-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 3px 0 0;
+    color: var(--cor-texto);
+    font-family: var(--fonte-mono);
+    font-size: 12px;
+    font-weight: 500;
+  }
+}

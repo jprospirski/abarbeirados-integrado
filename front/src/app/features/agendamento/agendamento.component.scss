@@ -66,42 +66,8 @@
   text-transform: uppercase;
 }
 
-/* ---------------------------------------------------------- alternador --- */
-
-.alternador {
-  display: inline-flex;
-  border: 1px solid var(--cor-borda-forte);
-  border-radius: var(--raio-pequeno);
-  overflow: hidden;
-}
-
-.alternador__op {
-  padding: 5px 13px;
-  border: 0;
-  background: transparent;
-  color: var(--cor-texto-suave);
-  font-family: var(--fonte-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition:
-    background 0.12s ease,
-    color 0.12s ease;
-
-  &+& {
-    border-left: 1px solid var(--cor-borda-forte);
-  }
-
-  &:hover {
-    color: var(--cor-texto);
-  }
-
-  &.is-ativo {
-    background: var(--cor-marca-cheia);
-    color: var(--cor-sobre-marca);
-    font-weight: 600;
-  }
-}
+/* O alternador virou peça do kit compartilhado em styles.scss, porque a tela de
+   serviços passou a usar a mesma forma. */
 
 .trio {
   display: grid;
